@@ -1,0 +1,96 @@
+
+# Terraform Variables - Example Configuration
+
+# Copy this file to terraform.tfvars and customize the values
+# Project Configuration
+project_name = "hubspoke"
+environment  = "dev"
+location     = "eastus"
+
+# Tags
+tags = {
+  Project     = "Week1-HubSpoke"
+  Environment = "Development"
+  ManagedBy   = "Terraform"
+  Owner       = "Sagar Patil"
+  CostCenter  = "Learning"
+}
+
+# Hub Network Configuration
+hub_vnet_address_space = ["10.0.0.0/16"]
+
+hub_subnets = {
+  AzureFirewallSubnet = {
+    address_prefixes = ["10.0.1.0/24"]
+  }
+  AzureBastionSubnet = {
+    address_prefixes = ["10.0.2.0/26"]
+  }
+  GatewaySubnet = {
+    address_prefixes = ["10.0.3.0/27"]
+  }
+  ManagementSubnet = {
+    address_prefixes = ["10.0.4.0/24"]
+  }
+}
+
+# Spoke Networks Configuration
+spoke_vnets = {
+  web = {
+    address_space = ["10.1.0.0/16"]
+    subnets = {
+      WebSubnet = {
+        address_prefixes = ["10.1.1.0/24"]
+      }
+      AppSubnet = {
+        address_prefixes = ["10.1.2.0/24"]
+      }
+    }
+  }
+  data = {
+    address_space = ["10.2.0.0/16"]
+    subnets = {
+      DataSubnet = {
+        address_prefixes                  = ["10.2.1.0/24"]
+        private_endpoint_network_policies = true
+      }
+      StorageSubnet = {
+        address_prefixes                  = ["10.2.2.0/24"]
+        private_endpoint_network_policies = true
+      }
+    }
+  }
+  mgmt = {
+    address_space = ["10.3.0.0/16"]
+    subnets = {
+      MgmtSubnet = {
+        address_prefixes = ["10.3.1.0/24"]
+      }
+      ToolingSubnet = {
+        address_prefixes = ["10.3.2.0/24"]
+      }
+    }
+  }
+}
+
+# Azure Firewall Configuration
+# Set to false to save costs during initial development
+enable_firewall   = true
+firewall_sku_tier = "Standard"  # Use "Basic" for lower cost (~$300/month vs $912/month)
+
+# Azure Bastion Configuration
+enable_bastion = true
+bastion_sku    = "Basic"  # Use "Standard" for advanced features
+
+# Monitoring Configuration
+log_retention_days     = 30
+enable_network_watcher = true
+enable_flow_logs       = true
+
+# Private DNS Zones
+private_dns_zones = [
+  "privatelink.database.windows.net",
+  "privatelink.blob.core.windows.net",
+  "privatelink.vaultcore.azure.net",
+  "privatelink.azurewebsites.net"
+]
