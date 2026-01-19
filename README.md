@@ -154,6 +154,20 @@ The firewall is configured with:
 
 To modify rules, edit the `azurerm_firewall_network_rule_collection` and `azurerm_firewall_application_rule_collection` resources in `main.tf`.
 
+### VPN Gateway Remote Access (Optional)
+
+By default, spoke networks have `use_remote_gateways = false` in their VNet peering configuration. To allow spoke VMs to use the hub's VPN gateway for on-premises connectivity:
+
+1. Ensure the VPN Gateway is fully provisioned (check Azure Portal)
+2. Edit `main.tf` and set `use_remote_gateways = true` in the spoke-to-hub peering resources
+3. Apply the change:
+   ```bash
+   terraform plan -out=tfplan
+   terraform apply tfplan
+   ```
+
+**Note:** `use_remote_gateways` cannot be enabled until the VPN gateway is ready, and cannot be used simultaneously with `allow_gateway_transit` in the same peering direction.
+
 ## 📊 Monitoring
 
 ### View Firewall Logs

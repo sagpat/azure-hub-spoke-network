@@ -311,7 +311,10 @@ resource "azurerm_virtual_network_peering" "prod_to_hub" {
   remote_virtual_network_id    = azurerm_virtual_network.hub.id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
-  use_remote_gateways          = false # Set to true after VPN gateway is ready
+  use_remote_gateways          = false
+  # Note: Set use_remote_gateways to true if you want spoke VMs to use the hub's VPN gateway
+  # This requires the VPN gateway to be fully provisioned before enabling.
+  # Cannot be used simultaneously with gateway_transit in the same peering.
 }
 
 # Hub to Development Spoke Peering
@@ -332,7 +335,10 @@ resource "azurerm_virtual_network_peering" "dev_to_hub" {
   remote_virtual_network_id    = azurerm_virtual_network.hub.id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
-  use_remote_gateways          = false # Set to true after VPN gateway is ready
+  use_remote_gateways          = false
+  # Note: Set use_remote_gateways to true if you want spoke VMs to use the hub's VPN gateway
+  # This requires the VPN gateway to be fully provisioned before enabling.
+  # Cannot be used simultaneously with gateway_transit in the same peering.
 }
 
 ###############################
@@ -345,7 +351,10 @@ resource "azurerm_route_table" "spoke_prod" {
   location                      = azurerm_resource_group.hub_spoke.location
   resource_group_name           = azurerm_resource_group.hub_spoke.name
   bgp_route_propagation_enabled = true
-  tags                          = var.tags
+  # BGP route propagation allows routes learned via VPN Gateway BGP to be automatically
+  # propagated to this route table. Enable this if you're using BGP with your VPN connections.
+  # If not using BGP, you can set this to false without impact.
+  tags = var.tags
 }
 
 resource "azurerm_route" "spoke_prod_to_internet" {
@@ -372,7 +381,10 @@ resource "azurerm_route_table" "spoke_dev" {
   location                      = azurerm_resource_group.hub_spoke.location
   resource_group_name           = azurerm_resource_group.hub_spoke.name
   bgp_route_propagation_enabled = true
-  tags                          = var.tags
+  # BGP route propagation allows routes learned via VPN Gateway BGP to be automatically
+  # propagated to this route table. Enable this if you're using BGP with your VPN connections.
+  # If not using BGP, you can set this to false without impact.
+  tags = var.tags
 }
 
 resource "azurerm_route" "spoke_dev_to_internet" {

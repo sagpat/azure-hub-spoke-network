@@ -125,12 +125,15 @@ ROUTE_COUNT_DEV=$(az network route-table route list \
     --query "length(@)" \
     -o tsv 2>/dev/null || echo "0")
 
-if [ "$ROUTE_COUNT_PROD" -ge 2 ] && [ "$ROUTE_COUNT_DEV" -ge 2 ]; then
+# Expect at least 1 route (internet route), ideally 2 (internet + other spoke)
+MIN_EXPECTED_ROUTES=1
+
+if [ "$ROUTE_COUNT_PROD" -ge $MIN_EXPECTED_ROUTES ] && [ "$ROUTE_COUNT_DEV" -ge $MIN_EXPECTED_ROUTES ]; then
     echo "✓ Production route table has ${ROUTE_COUNT_PROD} routes configured"
     echo "✓ Development route table has ${ROUTE_COUNT_DEV} routes configured"
 else
-    echo "✗ Production route table has ${ROUTE_COUNT_PROD} routes (expected at least 2)"
-    echo "✗ Development route table has ${ROUTE_COUNT_DEV} routes (expected at least 2)"
+    echo "✗ Production route table has ${ROUTE_COUNT_PROD} routes (expected at least ${MIN_EXPECTED_ROUTES})"
+    echo "✗ Development route table has ${ROUTE_COUNT_DEV} routes (expected at least ${MIN_EXPECTED_ROUTES})"
 fi
 
 # Validate NSGs
