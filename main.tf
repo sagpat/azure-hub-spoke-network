@@ -339,38 +339,56 @@ resource "azurerm_virtual_network_peering" "dev_to_hub" {
 # Route Tables
 ###############################
 
-# Route table for spoke networks to route traffic through firewall
-resource "azurerm_route_table" "spoke" {
-  name                          = "rt-${var.environment}-spoke"
+# Route table for production spoke
+resource "azurerm_route_table" "spoke_prod" {
+  name                          = "rt-${var.environment}-spoke-prod"
   location                      = azurerm_resource_group.hub_spoke.location
   resource_group_name           = azurerm_resource_group.hub_spoke.name
   bgp_route_propagation_enabled = true
   tags                          = var.tags
 }
 
-resource "azurerm_route" "spoke_to_internet" {
+resource "azurerm_route" "spoke_prod_to_internet" {
   name                   = "route-to-internet"
   resource_group_name    = azurerm_resource_group.hub_spoke.name
-  route_table_name       = azurerm_route_table.spoke.name
+  route_table_name       = azurerm_route_table.spoke_prod.name
   address_prefix         = "0.0.0.0/0"
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = azurerm_firewall.hub.ip_configuration[0].private_ip_address
 }
 
-resource "azurerm_route" "spoke_to_spoke_prod" {
-  name                   = "route-to-spoke-prod"
+resource "azurerm_route" "spoke_prod_to_spoke_dev" {
+  name                   = "route-to-spoke-dev"
   resource_group_name    = azurerm_resource_group.hub_spoke.name
-  route_table_name       = azurerm_route_table.spoke.name
-  address_prefix         = "10.1.0.0/16"
+  route_table_name       = azurerm_route_table.spoke_prod.name
+  address_prefix         = "10.2.0.0/16"
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = azurerm_firewall.hub.ip_configuration[0].private_ip_address
 }
 
-resource "azurerm_route" "spoke_to_spoke_dev" {
-  name                   = "route-to-spoke-dev"
+# Route table for development spoke
+resource "azurerm_route_table" "spoke_dev" {
+  name                          = "rt-${var.environment}-spoke-dev"
+  location                      = azurerm_resource_group.hub_spoke.location
+  resource_group_name           = azurerm_resource_group.hub_spoke.name
+  bgp_route_propagation_enabled = true
+  tags                          = var.tags
+}
+
+resource "azurerm_route" "spoke_dev_to_internet" {
+  name                   = "route-to-internet"
   resource_group_name    = azurerm_resource_group.hub_spoke.name
-  route_table_name       = azurerm_route_table.spoke.name
-  address_prefix         = "10.2.0.0/16"
+  route_table_name       = azurerm_route_table.spoke_dev.name
+  address_prefix         = "0.0.0.0/0"
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = azurerm_firewall.hub.ip_configuration[0].private_ip_address
+}
+
+resource "azurerm_route" "spoke_dev_to_spoke_prod" {
+  name                   = "route-to-spoke-prod"
+  resource_group_name    = azurerm_resource_group.hub_spoke.name
+  route_table_name       = azurerm_route_table.spoke_dev.name
+  address_prefix         = "10.1.0.0/16"
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = azurerm_firewall.hub.ip_configuration[0].private_ip_address
 }
@@ -378,22 +396,22 @@ resource "azurerm_route" "spoke_to_spoke_dev" {
 # Associate route tables with subnets
 resource "azurerm_subnet_route_table_association" "spoke_prod_workload" {
   subnet_id      = azurerm_subnet.spoke_prod_workload.id
-  route_table_id = azurerm_route_table.spoke.id
+  route_table_id = azurerm_route_table.spoke_prod.id
 }
 
 resource "azurerm_subnet_route_table_association" "spoke_prod_data" {
   subnet_id      = azurerm_subnet.spoke_prod_data.id
-  route_table_id = azurerm_route_table.spoke.id
+  route_table_id = azurerm_route_table.spoke_prod.id
 }
 
 resource "azurerm_subnet_route_table_association" "spoke_dev_workload" {
   subnet_id      = azurerm_subnet.spoke_dev_workload.id
-  route_table_id = azurerm_route_table.spoke.id
+  route_table_id = azurerm_route_table.spoke_dev.id
 }
 
 resource "azurerm_subnet_route_table_association" "spoke_dev_data" {
   subnet_id      = azurerm_subnet.spoke_dev_data.id
-  route_table_id = azurerm_route_table.spoke.id
+  route_table_id = azurerm_route_table.spoke_dev.id
 }
 
 ###############################

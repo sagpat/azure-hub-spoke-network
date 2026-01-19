@@ -111,16 +111,26 @@ fi
 echo ""
 echo "Validating Route Tables..."
 
-ROUTE_COUNT=$(az network route-table route list \
+# Check production spoke route table
+ROUTE_COUNT_PROD=$(az network route-table route list \
     --resource-group "${RG_NAME}" \
-    --route-table-name "rt-prod-spoke" \
+    --route-table-name "rt-prod-spoke-prod" \
     --query "length(@)" \
     -o tsv 2>/dev/null || echo "0")
 
-if [ "$ROUTE_COUNT" -ge 3 ]; then
-    echo "✓ Route table has ${ROUTE_COUNT} routes configured"
+# Check development spoke route table
+ROUTE_COUNT_DEV=$(az network route-table route list \
+    --resource-group "${RG_NAME}" \
+    --route-table-name "rt-prod-spoke-dev" \
+    --query "length(@)" \
+    -o tsv 2>/dev/null || echo "0")
+
+if [ "$ROUTE_COUNT_PROD" -ge 2 ] && [ "$ROUTE_COUNT_DEV" -ge 2 ]; then
+    echo "✓ Production route table has ${ROUTE_COUNT_PROD} routes configured"
+    echo "✓ Development route table has ${ROUTE_COUNT_DEV} routes configured"
 else
-    echo "✗ Route table has only ${ROUTE_COUNT} routes (expected at least 3)"
+    echo "✗ Production route table has ${ROUTE_COUNT_PROD} routes (expected at least 2)"
+    echo "✗ Development route table has ${ROUTE_COUNT_DEV} routes (expected at least 2)"
 fi
 
 # Validate NSGs
@@ -152,7 +162,8 @@ echo ""
 echo "Network Connectivity:"
 echo "  - Hub to Prod Peering: ${PEERING_HUB_TO_PROD}"
 echo "  - Hub to Dev Peering: ${PEERING_HUB_TO_DEV}"
-echo "  - Route Tables: ${ROUTE_COUNT} routes"
+echo "  - Production Route Table: ${ROUTE_COUNT_PROD} routes"
+echo "  - Development Route Table: ${ROUTE_COUNT_DEV} routes"
 echo "  - NSGs: ${NSG_COUNT} groups"
 echo ""
 echo "For detailed architecture information, see:"
